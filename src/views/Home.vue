@@ -1,7 +1,7 @@
 <template>
   <div>
     <el-row>
-      <el-col :span="8">
+      <el-col :span="8" style="padding-right: 10px">
         <el-card class="box-card">
           <div class="user">
             <img src="../assets/pander.webp" alt="" />
@@ -24,7 +24,7 @@
               :label="val"
             ></el-table-column> </el-table></el-card
       ></el-col>
-      <el-col :span="16">
+      <el-col :span="16" style="padding-left: 10px">
         <div class="num">
           <el-card
             v-for="item in countData"
@@ -42,6 +42,14 @@
             </div>
           </el-card>
         </div>
+        <el-card style="height: 280px">
+          <!-- 折线图 -->
+          <div ref="echarts1" style="height: 280px"></div>
+        </el-card>
+        <div class="graph">
+          <el-card style="height: 260px"></el-card>
+          <el-card style="height: 260px"></el-card>
+        </div>
       </el-col>
     </el-row>
   </div>
@@ -49,48 +57,12 @@
 
 <script>
 import { getData } from '../api'
+import * as echart from 'echarts'
 export default {
   name: 'HomeVue',
   data() {
     return {
-      tableData: [
-        {
-          name: 'oppo',
-          todayBuy: 100,
-          monthBuy: 300,
-          totalBuy: 800
-        },
-        {
-          name: 'vivo',
-          todayBuy: 100,
-          monthBuy: 300,
-          totalBuy: 800
-        },
-        {
-          name: '苹果',
-          todayBuy: 100,
-          monthBuy: 300,
-          totalBuy: 800
-        },
-        {
-          name: '小米',
-          todayBuy: 100,
-          monthBuy: 300,
-          totalBuy: 800
-        },
-        {
-          name: '三星',
-          todayBuy: 100,
-          monthBuy: 300,
-          totalBuy: 800
-        },
-        {
-          name: '魅族',
-          todayBuy: 100,
-          monthBuy: 300,
-          totalBuy: 800
-        }
-      ],
+      tableData: [],
       tableLabel: {
         name: '课程',
         todayBuy: '今日购买',
@@ -138,8 +110,29 @@ export default {
     }
   },
   mounted() {
-    getData().then((data) => {
-      console.log(data)
+    getData().then(({ data: res }) => {
+      const { tableData } = res.data
+      this.tableData = tableData
+      //曲线图
+      const echarts1 = echart.init(this.$refs.echarts1)
+      var echarts1Option = {}
+      const { orderData } = res.data
+      const xAxis = Object.keys(orderData.data[0])
+      const xAxisData = {
+        data: xAxis
+      }
+      echarts1Option.xAxis = xAxisData
+      echarts1Option.yAxis = {}
+      echarts1Option.legend = xAxisData
+      echarts1Option.series = []
+      xAxis.forEach((key) => {
+        echarts1Option.series.push({
+          name: key,
+          data: orderData.data.map((item) => item[key]),
+          type: 'line'
+        })
+      })
+      echarts1.setOption(echarts1Option)
     })
   }
 }
@@ -212,6 +205,14 @@ export default {
   .el-card {
     width: 32%;
     margin-bottom: 20px;
+  }
+}
+.graph {
+  margin-top: 20px;
+  display: flex;
+  justify-content: space-between;
+  .el-card {
+    width: 48%;
   }
 }
 </style>
